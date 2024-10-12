@@ -18,4 +18,8 @@ def create_app(test_config=None):
 
     db.init_app(app)
     migrate = Migrate(app, db)
+
+    from . import products
+    app.register_blueprint(products.bp)
+
     return app
