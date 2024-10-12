@@ -63,3 +63,13 @@ def test_update_price(app, client, create_prod):
     with app.app_context():
         updated_prod = db.session.get(Product, prod_id)
         assert updated_prod.price == 25.0
+
+
+def test_delete_product(app, client, create_prod):
+    prod_id = create_prod('Product1', 10.0, 1)
+    resp = client.delete(f'/products/{prod_id}')
+    assert resp.status_code == 204
+    
+    with app.app_context():
+        deleted_prod = db.session.get(Product, prod_id)
+        assert deleted_prod is None

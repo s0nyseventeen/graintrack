@@ -39,3 +39,11 @@ def update_price(product_id):
     product.price = data['price']
     db.session.commit()
     return jsonify({'message': 'Price was changed successfully'}), 204
+
+
+@bp.route('/<int:product_id>', methods=['DELETE'])
+def delete_product(product_id):
+    product = Product.query.get_or_404(product_id)
+    db.session.delete(product)
+    db.session.commit()
+    return jsonify({'message': 'Product was deleted successfully'}), 204
