@@ -53,3 +53,13 @@ def test_get_all(client, create_prod):
     assert all(
         prod['name'] == f'Product{i+1}' for i, prod in enumerate(products)
     )
+
+
+def test_update_price(app, client, create_prod):
+    prod_id = create_prod('Product1', 20.0, 1)
+    resp = client.patch(f'/products/{prod_id}', json={'price': 25.0})
+    assert resp.status_code == 204
+    
+    with app.app_context():
+        updated_prod = db.session.get(Product, prod_id)
+        assert updated_prod.price == 25.0
