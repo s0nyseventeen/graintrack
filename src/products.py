@@ -90,3 +90,16 @@ def reserve(product_id):
         'product': product.to_dict()
     }), 200
 
+
+@bp.route('/<int:product_id>/unreserve', methods=['PATCH'])
+def unreserve(product_id):
+    product = Product.query.get_or_404(product_id)
+    if not product.reserved:
+        return jsonify({'message': 'Product is not reserved'}), 400
+
+    product.reserved = False
+    db.session.commit()
+    return jsonify({
+        'message': 'Product unreserved successfully',
+        'product': product.to_dict()
+    }), 200
