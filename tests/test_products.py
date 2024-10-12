@@ -73,3 +73,14 @@ def test_delete_product(app, client, create_prod):
     with app.app_context():
         deleted_prod = db.session.get(Product, prod_id)
         assert deleted_prod is None
+
+
+def test_filter_products(client, create_prod):
+    create_prod('Product1', 10.0, 1)
+    create_prod('Product2', 20.0, 2)
+
+    resp = client.get('/products/filter?category_id=1')
+    assert resp.status_code == 200
+    products = resp.get_json()
+    assert len(products) == 1
+    assert products[0]['category_id'] == 1
