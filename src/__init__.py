@@ -1,4 +1,7 @@
 from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy()
 
 
 def create_app(test_config=None):
@@ -11,4 +14,6 @@ def create_app(test_config=None):
             'SECRET_KEY': 'dev',
             'SQLALCHEMY_DATABASE_URI': 'sqlite:///store.db'
         })
+
+    db.init_app(app)
     return app
