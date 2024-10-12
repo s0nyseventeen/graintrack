@@ -1,6 +1,7 @@
 import pytest
 
 from src import db
+from src.models import Category
 from src.models import Product
 
 
@@ -25,6 +26,20 @@ def create_prod(app):
         return prod_id
 
     return get_prod_id
+
+
+@pytest.fixture
+def create_category(app):
+
+    def get_category_id(name='Test Category'):
+        category = Category(name=name)
+        with app.app_context():
+            db.session.add(category)
+            db.session.commit()
+            category_id = category.id
+        return category_id
+
+    return get_category_id
 
 
 def test_create_product(client):
@@ -151,3 +166,30 @@ def test_sell_already_sold(client, create_prod):
     resp = client.patch(f'/products/{prod_id}/sell')
     assert resp.status_code == 400
     assert resp.get_json()['message'] == 'Product has already been sold'
+
+
+def test_sold_report_without_filtering_category(
+    client, create_category, create_prod
+):
+    category_id = create_category()
+    create_prod('Sold Product 1', 10.0, category_id, sold=True)
+    create_prod('Sold Product 2', 20.0, category_id, sold=True)
+
+    resp = client.get('/products/report')
+    assert resp.status_code == 200
+    sold_products = resp.get_json()
+    assert len(sold_products) == 2
+
+
+def test_sold_report_with_filtering_category(
+    client, create_category, create_prod
+):
+    category_id = create_category()
+    create_prod('Sold Product 1', 10.0, category_id, sold=True)
+    create_prod('Sold Product 2', 20.0, category_id, sold=True)
+
+    resp = client.get(f'/products/report?category_id={category_id}')
+    assert resp.status_code == 200
+    sold_products = resp.get_json()
+    assert len(sold_products) == 2
+    assert all(prod['category_id'] == category_id for prod in sold_products)

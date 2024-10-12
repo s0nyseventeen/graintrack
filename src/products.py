@@ -118,3 +118,15 @@ def sell(product_id):
         'message': 'Product sold successfully',
         'product': product.to_dict()
     }), 200
+
+
+@bp.route('/report', methods=['GET'])
+def sold_report():
+    category_id = request.args.get('category_id', type=int)
+    query = Product.query.filter_by(sold=True)
+
+    if category_id:
+        query = query.filter_by(category_id=category_id)
+
+    sold = query.all()
+    return jsonify([product.to_dict() for product in sold]), 200
