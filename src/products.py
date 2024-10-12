@@ -21,3 +21,9 @@ def create_product():
     db.session.add(new_product)
     db.session.commit()
     return jsonify(new_product.to_dict()), 201
+
+
+@bp.route('/all', methods=['GET'])
+def get_all():
+    products = Product.query.all()
+    return jsonify([product.to_dict() for product in products])
