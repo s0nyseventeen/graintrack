@@ -75,3 +75,18 @@ def set_discount(product_id):
         'message': f'{discount=}% was set',
         'product': product.to_dict()
     })
+
+
+@bp.route('/<int:product_id>/reserve', methods=['PATCH'])
+def reserve(product_id):
+    product = Product.query.get_or_404(product_id)
+    if product.reserved:
+        return jsonify({'message': 'Product is already reserved'}), 400
+
+    product.reserved = True
+    db.session.commit()
+    return jsonify({
+        'message': 'Product reserved successfully',
+        'product': product.to_dict()
+    }), 200
+
