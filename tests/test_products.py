@@ -84,3 +84,25 @@ def test_filter_products(client, create_prod):
     products = resp.get_json()
     assert len(products) == 1
     assert products[0]['category_id'] == 1
+
+
+def test_set_discount_success(client, create_prod):
+    prod_id = create_prod('Test Product', 10.0, 1)
+    resp = client.patch(
+        f'/products/{prod_id}/set_discount', json={'discount': 25.0}
+    )
+    assert resp.status_code == 200
+    assert resp.get_json()['product']['discount'] == 25.0
+
+
+@pytest.mark.parametrize(
+    'discount, status_code',
+    [
+        (150.0, 400),
+        ({}, 400)
+    ]
+)
+def test_set_discount_fail(client, create_prod, discount, status_code):
+    prod_id = create_prod('Test Product', 10.0, 1)
+    resp = client.patch(f'/products/{prod_id}/set_discount', json={'discount': discount} if isinstance(discount, float) else {})
+    assert resp.status_code == status_code

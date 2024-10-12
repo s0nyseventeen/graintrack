@@ -56,3 +56,22 @@ def filter_products():
         products = Product.query.filter_by(category_id=category_id).all()
         return jsonify([product.to_dict() for product in products]), 200
     return jsonify({'message': 'Category is not provided'})
+
+
+@bp.route('/<int:product_id>/set_discount', methods=['PATCH'])
+def set_discount(product_id):
+    data = request.get_json()
+    if not data:
+        abort(400, description='Required field: "discount"')
+
+    product = Product.query.get_or_404(product_id)
+    discount = data['discount']
+    if not (0 < discount < 100):
+        abort(400, description='Discount must be between 0 and 100')
+
+    product.discount = discount
+    db.session.commit()
+    return jsonify({
+        'message': f'{discount=}% was set',
+        'product': product.to_dict()
+    })
