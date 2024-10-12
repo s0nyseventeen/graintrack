@@ -136,3 +136,18 @@ def test_unreserve_not_reserved(client, create_prod):
     resp = client.patch(f'/products/{prod_id}/unreserve')
     assert resp.status_code == 400
     assert resp.get_json()['message'] == 'Product is not reserved'
+
+
+def test_sell_success(client, create_prod):
+    prod_id = create_prod('Test Product', 20.0, 1)
+    resp = client.patch(f'/products/{prod_id}/sell')
+    assert resp.status_code == 200
+    assert resp.get_json()['message'] == 'Product sold successfully'
+    assert resp.get_json()['product']['sold']
+
+
+def test_sell_already_sold(client, create_prod):
+    prod_id = create_prod('Test Product', 20.0, 1, sold=True)
+    resp = client.patch(f'/products/{prod_id}/sell')
+    assert resp.status_code == 400
+    assert resp.get_json()['message'] == 'Product has already been sold'

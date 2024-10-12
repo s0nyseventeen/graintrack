@@ -103,3 +103,18 @@ def unreserve(product_id):
         'message': 'Product unreserved successfully',
         'product': product.to_dict()
     }), 200
+
+
+@bp.route('/<int:product_id>/sell', methods=['PATCH'])
+def sell(product_id):
+    product = Product.query.get_or_404(product_id)
+    if product.sold:
+        return jsonify({'message': 'Product has already been sold'}), 400
+
+    product.reserved = False
+    product.sold = True
+    db.session.commit()
+    return jsonify({
+        'message': 'Product sold successfully',
+        'product': product.to_dict()
+    }), 200
