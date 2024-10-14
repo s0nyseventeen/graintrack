@@ -9,12 +9,19 @@ from src.models import Product
 def create_prod(app):
 
     def get_prod_id(
-        name, price, category_id, sold=False, reserved=False, discount=0.0
+        name,
+        price,
+        category_id,
+        amount=1,
+        sold=False,
+        reserved=False,
+        discount=0.0
     ):
         prod = Product(
             name=name,
             price=price,
             category_id=category_id,
+            amount=amount,
             sold=sold,
             reserved=reserved,
             discount=discount
@@ -58,8 +65,8 @@ def test_create_product(client):
 
 
 def test_get_all(client, create_prod):
-    create_prod('Product1', 10.0, 1)
-    create_prod('Product2', 20.0, 2)
+    create_prod('Product1', 10.0, 1, amount=5)
+    create_prod('Product2', 20.0, 2, amount=3)
 
     resp = client.get('/products/all')
     assert resp.status_code == 200

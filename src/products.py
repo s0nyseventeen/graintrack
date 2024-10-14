@@ -13,10 +13,16 @@ bp = Blueprint('products', __name__, url_prefix='/products')
 def create_product():
     data = request.get_json()
     if not data:
-        abort(400, description='Required fields: "name", "price", "category_id"')
+        abort(
+            400,
+            description='Required fields: "name", "price", "amount", "category_id"'
+        )
 
     new_product = Product(
-        name=data['name'], price=data['price'], category_id=data['category_id']
+        name=data['name'],
+        price=data['price'],
+        amount=data.get('amount', 1),
+        category_id=data['category_id']
     )
     db.session.add(new_product)
     db.session.commit()
@@ -25,7 +31,7 @@ def create_product():
 
 @bp.route('/all', methods=['GET'])
 def get_all():
-    products = Product.query.all()
+    products = Product.query.filter(Product.amount > 0).all()
     return jsonify([product.to_dict() for product in products])
 
 
@@ -52,10 +58,11 @@ def delete_product(product_id):
 @bp.route('/filter', methods=['GET'])
 def filter_products():
     category_id = request.args.get('category_id', type=int)
-    if category_id:
-        products = Product.query.filter_by(category_id=category_id).all()
-        return jsonify([product.to_dict() for product in products]), 200
-    return jsonify({'message': 'Category is not provided'})
+    if not category_id:
+        return jsonify({'message': 'Category is not provided'})
+
+    products = Product.query.filter(Product.amount > 0).filter_by(category_id=category_id).all()
+    return jsonify([product.to_dict() for product in products]), 200
 
 
 @bp.route('/<int:product_id>/set_discount', methods=['PATCH'])
@@ -111,8 +118,12 @@ def sell(product_id):
     if product.sold:
         return jsonify({'message': 'Product has already been sold'}), 400
 
+    if product.amount <= 0:
+        return jsonify({'message': 'Product is out of stock'})
+
     product.reserved = False
     product.sold = True
+    product.amount -= 1
     db.session.commit()
     return jsonify({
         'message': 'Product sold successfully',

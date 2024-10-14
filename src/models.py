@@ -13,6 +13,7 @@ class Product(db.Model):
     discount = db.Column(db.Float, default=0.0)
     reserved = db.Column(db.Boolean, default=False)
     sold = db.Column(db.Boolean, default=False)
+    amount = db.Column(db.Integer, default=0)
     category_id = db.Column(
         db.Integer, db.ForeignKey('category.id'), nullable=False
     )
@@ -26,5 +27,6 @@ class Product(db.Model):
             'category_id': self.category_id,
             'discount': self.discount,
             'reserved': self.reserved,
-            'sold': self.sold
+            'sold': self.sold,
+            'amount': self.amount
         }
