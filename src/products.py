@@ -90,6 +90,10 @@ def reserve(product_id):
     if product.reserved:
         return jsonify({'message': 'Product is already reserved'}), 400
 
+    if product.amount <= 0:
+        return jsonify({'message': 'Product is out of stock'}), 400
+
+    product.amount -= 1
     product.reserved = True
     db.session.commit()
     return jsonify({

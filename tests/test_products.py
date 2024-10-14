@@ -131,11 +131,20 @@ def test_set_discount_fail(client, create_prod, discount, status_code):
 
 
 def test_reserve_success(client, create_prod):
-    prod_id = create_prod('Test Product', 20.0, 1)
+    prod_id = create_prod('Test Product', 20.0, 1, amount=5)
     resp = client.patch(f'/products/{prod_id}/reserve')
     assert resp.status_code == 200
+    product = resp.get_json()['product']
     assert resp.get_json()['message'] == 'Product reserved successfully'
-    assert resp.get_json()['product']['reserved']
+    assert product['reserved']
+    assert product['amount'] == 4
+
+
+def test_reserve_no_amount(client, create_prod):
+    prod_id = create_prod('Test Product out of stock', 10.0, 1, amount=0)
+    resp = client.patch(f'/products/{prod_id}/reserve')
+    assert resp.status_code == 400
+    assert resp.get_json()['message'] == 'Product is out of stock'
 
 
 def test_reserve_already_reserved(client, create_prod):
