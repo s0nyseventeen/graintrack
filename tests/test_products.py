@@ -9,12 +9,19 @@ from src.models import Product
 def create_prod(app):
 
     def get_prod_id(
-        name, price, category_id, sold=False, reserved=False, discount=0.0
+        name,
+        price,
+        category_id,
+        amount=1,
+        sold=False,
+        reserved=False,
+        discount=0.0
     ):
         prod = Product(
             name=name,
             price=price,
             category_id=category_id,
+            amount=amount,
             sold=sold,
             reserved=reserved,
             discount=discount
@@ -58,8 +65,8 @@ def test_create_product(client):
 
 
 def test_get_all(client, create_prod):
-    create_prod('Product1', 10.0, 1)
-    create_prod('Product2', 20.0, 2)
+    create_prod('Product1', 10.0, 1, amount=5)
+    create_prod('Product2', 20.0, 2, amount=3)
 
     resp = client.get('/products/all')
     assert resp.status_code == 200
@@ -124,11 +131,20 @@ def test_set_discount_fail(client, create_prod, discount, status_code):
 
 
 def test_reserve_success(client, create_prod):
-    prod_id = create_prod('Test Product', 20.0, 1)
+    prod_id = create_prod('Test Product', 20.0, 1, amount=5)
     resp = client.patch(f'/products/{prod_id}/reserve')
     assert resp.status_code == 200
+    product = resp.get_json()['product']
     assert resp.get_json()['message'] == 'Product reserved successfully'
-    assert resp.get_json()['product']['reserved']
+    assert product['reserved']
+    assert product['amount'] == 4
+
+
+def test_reserve_no_amount(client, create_prod):
+    prod_id = create_prod('Test Product out of stock', 10.0, 1, amount=0)
+    resp = client.patch(f'/products/{prod_id}/reserve')
+    assert resp.status_code == 400
+    assert resp.get_json()['message'] == 'Product is out of stock'
 
 
 def test_reserve_already_reserved(client, create_prod):
@@ -139,11 +155,13 @@ def test_reserve_already_reserved(client, create_prod):
 
 
 def test_unreserve_success(client, create_prod):
-    prod_id = create_prod('Test Product', 20.0, 1, reserved=True)
+    prod_id = create_prod('Test Product', 20.0, 1, amount=4, reserved=True)
     resp = client.patch(f'/products/{prod_id}/unreserve')
     assert resp.status_code == 200
+    product = resp.get_json()['product']
     assert resp.get_json()['message'] == 'Product unreserved successfully'
-    assert not resp.get_json()['product']['reserved']
+    assert not product['reserved']
+    assert product['amount'] == 5
 
 
 def test_unreserve_not_reserved(client, create_prod):
