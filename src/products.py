@@ -109,6 +109,7 @@ def unreserve(product_id):
         return jsonify({'message': 'Product is not reserved'}), 400
 
     product.reserved = False
+    product.amount += 1
     db.session.commit()
     return jsonify({
         'message': 'Product unreserved successfully',

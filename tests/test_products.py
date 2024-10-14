@@ -155,11 +155,13 @@ def test_reserve_already_reserved(client, create_prod):
 
 
 def test_unreserve_success(client, create_prod):
-    prod_id = create_prod('Test Product', 20.0, 1, reserved=True)
+    prod_id = create_prod('Test Product', 20.0, 1, amount=4, reserved=True)
     resp = client.patch(f'/products/{prod_id}/unreserve')
     assert resp.status_code == 200
+    product = resp.get_json()['product']
     assert resp.get_json()['message'] == 'Product unreserved successfully'
-    assert not resp.get_json()['product']['reserved']
+    assert not product['reserved']
+    assert product['amount'] == 5
 
 
 def test_unreserve_not_reserved(client, create_prod):
