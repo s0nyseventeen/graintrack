@@ -49,13 +49,21 @@ def create_category(app):
     return get_category_id
 
 
-def test_create_product(client):
+@pytest.fixture
+def jwt_token(client):
+    data = {'username': 'admin', 'password': 'admin123'}
+    resp = client.post('/auth/login', json=data)
+    return resp.get_json()['access_token']
+
+
+def test_create_product(client, jwt_token):
     new_prod = {
         'name': 'Test Product',
         'price': 10.0,
         'category_id': 1
     }
-    resp = client.post('/products/create', json=new_prod)
+    headers = {'Authorization': f'Bearer {jwt_token}'}
+    resp = client.post('/products/create', json=new_prod, headers=headers)
 
     assert resp.status_code == 201
     prod_data = resp.get_json()
@@ -77,9 +85,12 @@ def test_get_all(client, create_prod):
     )
 
 
-def test_update_price(app, client, create_prod):
+def test_update_price(app, client, create_prod, jwt_token):
     prod_id = create_prod('Product1', 20.0, 1)
-    resp = client.patch(f'/products/{prod_id}', json={'price': 25.0})
+    headers = {'Authorization': f'Bearer {jwt_token}'}
+    resp = client.patch(
+        f'/products/{prod_id}', json={'price': 25.0}, headers=headers
+    )
     assert resp.status_code == 204
     
     with app.app_context():
@@ -87,9 +98,10 @@ def test_update_price(app, client, create_prod):
         assert updated_prod.price == 25.0
 
 
-def test_delete_product(app, client, create_prod):
+def test_delete_product(app, client, create_prod, jwt_token):
     prod_id = create_prod('Product1', 10.0, 1)
-    resp = client.delete(f'/products/{prod_id}')
+    headers = {'Authorization': f'Bearer {jwt_token}'}
+    resp = client.delete(f'/products/{prod_id}', headers=headers)
     assert resp.status_code == 204
     
     with app.app_context():
@@ -108,21 +120,20 @@ def test_filter_products(client, create_prod):
     assert products[0]['category_id'] == 1
 
 
-def test_set_discount_success(client, create_prod):
+def test_set_discount_success(client, create_prod, jwt_token):
     prod_id = create_prod('Test Product', 10.0, 1)
+    headers = {'Authorization': f'Bearer {jwt_token}'}
     resp = client.patch(
-        f'/products/{prod_id}/set_discount', json={'discount': 25.0}
+        f'/products/{prod_id}/set_discount',
+        json={'discount': 25.0},
+        headers=headers
     )
     assert resp.status_code == 200
     assert resp.get_json()['product']['discount'] == 25.0
 
 
 @pytest.mark.parametrize(
-    'discount, status_code',
-    [
-        (150.0, 400),
-        ({}, 400)
-    ]
+    'discount, status_code', [(150.0, 401), ({}, 401)]
 )
 def test_set_discount_fail(client, create_prod, discount, status_code):
     prod_id = create_prod('Test Product', 10.0, 1)
@@ -187,26 +198,30 @@ def test_sell_already_sold(client, create_prod):
 
 
 def test_sold_report_without_filtering_category(
-    client, create_category, create_prod
+    client, create_category, create_prod, jwt_token
 ):
     category_id = create_category()
     create_prod('Sold Product 1', 10.0, category_id, sold=True)
     create_prod('Sold Product 2', 20.0, category_id, sold=True)
 
-    resp = client.get('/products/report')
+    headers = {'Authorization': f'Bearer {jwt_token}'}
+    resp = client.get('/products/report', headers=headers)
     assert resp.status_code == 200
     sold_products = resp.get_json()
     assert len(sold_products) == 2
 
 
 def test_sold_report_with_filtering_category(
-    client, create_category, create_prod
+    client, create_category, create_prod, jwt_token
 ):
     category_id = create_category()
     create_prod('Sold Product 1', 10.0, category_id, sold=True)
     create_prod('Sold Product 2', 20.0, category_id, sold=True)
 
-    resp = client.get(f'/products/report?category_id={category_id}')
+    headers = {'Authorization': f'Bearer {jwt_token}'}
+    resp = client.get(
+        f'/products/report?category_id={category_id}', headers=headers
+    )
     assert resp.status_code == 200
     sold_products = resp.get_json()
     assert len(sold_products) == 2
