@@ -2,6 +2,7 @@ from flask import abort
 from flask import Blueprint
 from flask import jsonify
 from flask import request
+from flask_jwt_extended import jwt_required
 
 from src import db
 from src.models import Product
@@ -10,6 +11,7 @@ bp = Blueprint('products', __name__, url_prefix='/products')
 
 
 @bp.route('/create', methods=['POST'])
+@jwt_required()
 def create_product():
     data = request.get_json()
     if not data:
@@ -36,6 +38,7 @@ def get_all():
 
 
 @bp.route('/<int:product_id>', methods=['PATCH'])
+@jwt_required()
 def update_price(product_id):
     data = request.get_json()
     if not data:
@@ -48,6 +51,7 @@ def update_price(product_id):
 
 
 @bp.route('/<int:product_id>', methods=['DELETE'])
+@jwt_required()
 def delete_product(product_id):
     product = Product.query.get_or_404(product_id)
     db.session.delete(product)
@@ -66,6 +70,7 @@ def filter_products():
 
 
 @bp.route('/<int:product_id>/set_discount', methods=['PATCH'])
+@jwt_required()
 def set_discount(product_id):
     data = request.get_json()
     if not data:
@@ -137,6 +142,7 @@ def sell(product_id):
 
 
 @bp.route('/report', methods=['GET'])
+@jwt_required()
 def sold_report():
     category_id = request.args.get('category_id', type=int)
     query = Product.query.filter_by(sold=True)

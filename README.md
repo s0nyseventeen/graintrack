@@ -23,7 +23,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Run migrations to set up the database
+### Set up the database
 
 Enter the python3 interpreter (type `python`) under the root folder. `venv` must be activated
 
