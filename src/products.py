@@ -32,7 +32,7 @@ def create_product():
 @bp.route('/all', methods=['GET'])
 def get_all():
     products = Product.query.filter(Product.amount > 0).all()
-    return jsonify([product.to_dict() for product in products])
+    return jsonify([product.to_dict() for product in products]), 200
 
 
 @bp.route('/<int:product_id>', methods=['PATCH'])
@@ -81,7 +81,7 @@ def set_discount(product_id):
     return jsonify({
         'message': f'{discount=}% was set',
         'product': product.to_dict()
-    })
+    }), 200
 
 
 @bp.route('/<int:product_id>/reserve', methods=['PATCH'])
@@ -124,7 +124,7 @@ def sell(product_id):
         return jsonify({'message': 'Product has already been sold'}), 400
 
     if product.amount <= 0:
-        return jsonify({'message': 'Product is out of stock'})
+        return jsonify({'message': 'Product is out of stock'}), 400
 
     product.reserved = False
     product.sold = True
