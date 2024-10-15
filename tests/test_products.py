@@ -89,7 +89,7 @@ def test_update_price(app, client, create_prod, jwt_token):
     prod_id = create_prod('Product1', 20.0, 1)
     headers = {'Authorization': f'Bearer {jwt_token}'}
     resp = client.patch(
-        f'/products/{prod_id}', json={'price': 25.0}, headers=headers
+        f'/products/update/{prod_id}', json={'price': 25.0}, headers=headers
     )
     assert resp.status_code == 204
     
