@@ -42,49 +42,115 @@ with app.app_context():
 flask --app src run --debug
 ```
 
+### Authentication
+
+This API uses JWT (JSON Web Token) for authentication. Users must obtain a token to access certain endpoints. The token is included in the `Authorization` header of each request
+
+### How to Obtain a Token
+
+To obtain a JWT, you need to authenticate a user. You can do this by sending a `POST` request to the login endpoint (for simplicity username and password is provided)
+
+```bash
+curl -X POST http://localhost:5000/auth/login \
+-H "Content-Type: application/json" \
+-d '{"username": "admin", "password": "admin123"}'
+```
+
+Response
+
+```json
+{
+    "token": "your_jwt_token"
+}
+```
+
 ## API Endpoints
+
+#### Endpoints Requiring Authentication
+
+After obtaining the JWT, you can include it in the Authorization header of subsequent requests to access protected endpoints. Here's how to make a request with the token using `curl`
+
+```bash
+curl -X GET http://localhost:5000/products/<endpoint> \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer your_jwt_token"
+
+```
 
 1. Create a Product
 Endpoint: `POST /products/create`. Description: Add a new product
-    ```json
-    {
+    ```bash
+    curl -X POST http://localhost:5000/products/create \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer your_jwt_token" \
+    -d '{
         "name": "Product Name",
         "price": 10.0,
+        "amount": 100,
         "category_id": 1
-    }
+    }'
     ```
 
-2. Get All Products Endpoint: GET `/products/all`. Description: Retrieve a list of all products
-
-3. Filter Products by Category Endpoint: GET `/products/filter?category_id=<id> `. Description: Filter products by category
-
-4. Update Product Price
+2. Update Product Price
 Endpoint: PATCH `/products/<product_id>`. Description: Update the price of a product
-    ```json
-    {
-        "price": 20.0
-    }
+    ```bash
+    curl -X PATCH http://localhost:5000/products/product_id \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer your_jwt_token" \
+    -d '{"price": 20.0}'
     ```
 
-5. Set Discount
+3. Set Discount
 Endpoint: PATCH `/products/<product_id>/set_discount`. Description: Set a discount on a product
-    ```json
-    {
-        "discount": 15.0
-    }
+    ```bash
+    curl -X PATCH http://localhost:5000/products/product_id/set_discount \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer your_jwt_token" \
+    -d '{"discount": 20}'
     ```
 
-6. Reserve Product
-Endpoint: PATCH `/products/<product_id>/reserve`. Description: Reserve a product if it is not already reserved
-
-7. Unreserve Product
-Endpoint: PATCH `/products/<product_id>/unreserve`. Description: Unreserve a product if it is currently reserved
-
-8. Sell Product
-Endpoint: PATCH `/products/<product_id>/sell`. Description: Mark a product as sold if it has not already been sold
-
-9. Delete Product
+4. Delete Product
 Endpoint: DELETE `/products/<product_id>`. Description: Delete a product
+    ```bash
+    curl -X DELETE http://localhost:5000/products/product_id \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer your_jwt_token"
+    ```
 
-10. Sold Products Report
-Endpoint: GET `/products/report?category_id=<id>`. Description: Generate a report of sold products, with optional category filter
+5. Sold Products Report
+Endpoint: GET `/products/report`. Description: Generate a report of sold products, with optional category filter
+    ```bash
+    curl -X GET http://localhost:5000/products/report?category_id=<id> \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer your_jwt_token"
+    ```
+
+#### Endpoints which don't need Authentication
+
+6. Get All Products Endpoint: GET `/products/all`. Description: Retrieve a list of all products
+    ```bash
+    curl -X GET http://localhost:5000/products/all -H "Content-Type: application/json"
+    ```
+
+7. Filter Products by Category Endpoint: GET `/products/filter?category_id=<id> `. Description: Filter products by category
+    ```bash
+    curl -X GET http://localhost:5000/products/filter?category_id=<id> -H "Content-Type: application/json"
+    ``` 
+
+8. Reserve Product
+Endpoint: PATCH `/products/<product_id>/reserve`. Description: Reserve a product if it is not already reserved
+    ```bash
+    curl -X PATCH http://localhost:5000/products/<product_id>/reserve -H "Content-Type: application/json"
+    ```
+
+9. Unreserve Product
+Endpoint: PATCH `/products/<product_id>/unreserve`. Description: Unreserve a product if it is currently reserved
+    ```bash
+    curl -X PATCH http://localhost:5000/products/<product_id>/unreserve -H "Content-Type: application/json"
+    ```
+
+10. Sell Product
+Endpoint: PATCH `/products/<product_id>/sell`. Description: Mark a product as sold if it has not already been sold
+    ```bash
+    curl -X PATCH http://localhost:5000/products/<product_id>/sell -H "Content-Type: application/json"
+    ```

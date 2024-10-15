@@ -37,7 +37,7 @@ def get_all():
     return jsonify([product.to_dict() for product in products]), 200
 
 
-@bp.route('/<int:product_id>', methods=['PATCH'])
+@bp.route('/update/<int:product_id>', methods=['PATCH'])
 @jwt_required()
 def update_price(product_id):
     data = request.get_json()

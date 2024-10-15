@@ -89,7 +89,7 @@ def test_update_price(app, client, create_prod, jwt_token):
     prod_id = create_prod('Product1', 20.0, 1)
     headers = {'Authorization': f'Bearer {jwt_token}'}
     resp = client.patch(
-        f'/products/{prod_id}', json={'price': 25.0}, headers=headers
+        f'/products/update/{prod_id}', json={'price': 25.0}, headers=headers
     )
     assert resp.status_code == 204
     
@@ -133,11 +133,14 @@ def test_set_discount_success(client, create_prod, jwt_token):
 
 
 @pytest.mark.parametrize(
-    'discount, status_code', [(150.0, 401), ({}, 401)]
+    'discount, status_code', [(150.0, 400), (0, 400)]
 )
-def test_set_discount_fail(client, create_prod, discount, status_code):
+def test_set_discount_fail(client, create_prod, jwt_token, discount, status_code):
     prod_id = create_prod('Test Product', 10.0, 1)
-    resp = client.patch(f'/products/{prod_id}/set_discount', json={'discount': discount} if isinstance(discount, float) else {})
+    headers = {'Authorization': f'Bearer {jwt_token}'}
+    resp = client.patch(
+        f'/products/{prod_id}/set_discount', json={'discount': discount}, headers=headers
+    )
     assert resp.status_code == status_code
 
 
